@@ -92,9 +92,29 @@ resource "yandex_compute_instance" "test-vm" {
 ![изображение](https://github.com/user-attachments/assets/7c0c7d8c-8512-47e9-bc59-53003836b8b3)
 
 
-    Приватная подсеть.
+  #### Приватная подсеть.
+   Создать в VPC subnet с названием private, сетью 192.168.20.0/24.
+  ```
+ resource "yandex_vpc_subnet" "private-subnet" {
+  name           = local.subnet_name2
+  zone           = "ru-central1-a"
+  network_id     = yandex_vpc_network.vpc.id
+  v4_cidr_blocks = ["192.168.20.0/24"]
+  route_table_id = yandex_vpc_route_table.nat-instance-route.id
+}
+```   
+  Создать route table. Добавить статический маршрут, направляющий весь исходящий трафик private сети в NAT-инстанс.
+  ```
+# Создание таблицы маршрутизации и статического маршрута
 
-    Создать в VPC subnet с названием private, сетью 192.168.20.0/24.
-    Создать route table. Добавить статический маршрут, направляющий весь исходящий трафик private сети в NAT-инстанс.
+resource "yandex_vpc_route_table" "nat-instance-route" {
+  name       = local.route_table_name
+  network_id = yandex_vpc_network.vpc.id
+  static_route {
+    destination_prefix = "0.0.0.0/0"
+    next_hop_address   = yandex_compute_instance.nat-instance.network_interface.0.ip_address
+  }
+}
+  ```
     Создать в этой приватной подсети виртуалку с внутренним IP, подключиться к ней через виртуалку, созданную ранее, и убедиться, что есть доступ к интернету.
 
