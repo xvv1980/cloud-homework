@@ -116,5 +116,39 @@ resource "yandex_vpc_route_table" "nat-instance-route" {
   }
 }
   ```
-    Создать в этой приватной подсети виртуалку с внутренним IP, подключиться к ней через виртуалку, созданную ранее, и убедиться, что есть доступ к интернету.
+    Создать в этой приватной подсети виртуалку с внутренним IP
+  ```
+resource "yandex_compute_instance" "test-vm2" {
+  name        = local.vm_test_name2
+  platform_id = "standard-v3"
+  zone        = "ru-central1-a"
+
+  resources {
+    core_fraction = 20
+    cores         = 2
+    memory        = 2
+  }
+
+  boot_disk {
+    disk_id = yandex_compute_disk.boot-disk-ubuntu2.id
+  }
+
+  network_interface {
+    subnet_id          = yandex_vpc_subnet.private-subnet.id
+  }
+
+  metadata = {
+    user-data = "#cloud-config\nusers:\n  - name: ${var.vm_user}\n    groups: sudo\n    shell: /bin/bash\n    sudo: 'ALL=(ALL) NOPASSWD:ALL'\n    ssh_authorized_keys:\n      - ${file("${var.ssh_key_path}")}"
+  }
+}
+  ```
+       
+    подключиться к ней через виртуалку, созданную ранее, и убедиться, что есть доступ к интернету.
+    см. скрин YandexCloud выше.
+    Таблица маршрутизации
+    ![изображение](https://github.com/user-attachments/assets/528ed33c-2c5d-4165-99e8-d3d2de560f8e)
+
+    ![изображение](https://github.com/user-attachments/assets/c359e578-0146-4386-a667-47f0d920b42c)
+
+
 
